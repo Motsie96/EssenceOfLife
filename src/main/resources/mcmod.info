@@ -1,0 +1,16 @@
+[
+{
+  "modid": "essenceoflife",
+  "name": "Essence of Life",
+  "description": "Step 1: Kill mobs. Step 2: Collect essence. Step 3: Seize the world.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "https://github.com/Motsie96/EssenceOfLife/",
+  "updateUrl": "",
+  "authorList": ["Motsie96"],
+  "credits": "The Forge and FML guys, for making this example",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
