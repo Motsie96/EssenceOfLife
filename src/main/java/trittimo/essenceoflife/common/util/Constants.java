@@ -2,8 +2,8 @@ package trittimo.essenceoflife.common.util;
 
 public class Constants {
 	public static final class Items {
-		public static final String ESSENCE_EXTRACTOR_ACTIVE_NAME = "essenceExtractorActive";
-		public static final String ESSENCE_EXTRACTOR_INACTIVE_NAME = "essenceExtractorInactive";
+		public static final String SOUL_TABLET_ACTIVE = "soulTabletActive";
+		public static final String SOUL_TABLET_INACTIVE = "soulTabletInactive";
 	}
 
 	public static final String MOD_ID = "essenceoflife";
