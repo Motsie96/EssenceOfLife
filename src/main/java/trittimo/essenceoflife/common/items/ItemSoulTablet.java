@@ -3,6 +3,7 @@ package trittimo.essenceoflife.common.items;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -45,14 +46,12 @@ public class ItemSoulTablet extends ModItem {
 
     @Override
     public boolean itemInteractionForEntity(ItemStack stack, EntityPlayer player, EntityLivingBase entity) {
-        // TODO
-//		if (!player.getEntityWorld().isRemote) {
-//			if (entity instanceof EntityLiving && !(entity instanceof EntityPlayer)) {
-//				MobSpawnHelper.storeMob(stack, entity);
-//				changeActive(stack);
-//				return true;
-//			}
-//		}
+        if (!player.getEntityWorld().isRemote) {
+            if (entity instanceof EntityLiving && !(entity instanceof EntityPlayer)) {
+
+                return true;
+            }
+        }
         return false;
     }
 

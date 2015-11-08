@@ -2,114 +2,101 @@ package trittimo.essenceoflife.common.util.nbtmob;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
+import net.minecraft.entity.monster.EntityMob;
+import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagDouble;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.Facing;
 import net.minecraft.world.World;
 
 public class NBTMob {
     private NBTTagCompound mobCompound;
-    private Entity entity;
-    private boolean isSimple;
 
-    public NBTMob(Entity entity) {
-        this.entity = entity;
-    }
-
-    public NBTMob(Entity entity, boolean isSimple) {
-        this.entity = entity;
-        this.isSimple = isSimple;
-    }
-
-    public NBTMob(NBTTagCompound mobCompound, boolean isSimple) {
+    public NBTMob(NBTTagCompound mobCompound) {
         this.mobCompound = mobCompound;
-        this.isSimple = isSimple;
     }
 
-    public Entity constructNewEntity(World world) throws InvalidMobTag {
-        try {
-            if (!this.isSimple) {
-                return EntityList.createEntityFromNBT(this.mobCompound, world);
+    public NBTMob(Entity entity, World world) {
+        this.mobCompound = new NBTTagCompound();
+        entity.writeToNBT(mobCompound);
+        this.mobCompound.setString("readableName", entity.getCommandSenderName());
+        this.mobCompound.setString("id", (String) EntityList.classToStringMapping.get((entity.getClass())));
+        if (entity instanceof EntityMob) {
+            this.mobCompound.setByte("soulType", SoulType.DARK.getTypeAsByte());
+        } else if (entity instanceof EntityAnimal) {
+            this.mobCompound.setByte("soulType", SoulType.LIGHT.getTypeAsByte());
+        } else {
+            this.mobCompound.setByte("soulType", SoulType.UNKNOWN.getTypeAsByte());
+        }
+    }
+
+    public String getID() throws InvalidMobTag {
+        if (!this.mobCompound.hasKey("id")) {
+            throw new InvalidMobTag("id");
+        }
+        return this.mobCompound.getString("id");
+    }
+
+    public String getReadableName() throws InvalidMobTag {
+        if (!this.mobCompound.hasKey("readableName")) {
+            throw new InvalidMobTag("readableName");
+        }
+        return this.mobCompound.getString("readableName");
+    }
+
+    public Location getLocation() throws InvalidMobTag {
+        if (!this.mobCompound.hasKey("Pos")) {
+            throw new InvalidMobTag("Pos");
+        }
+
+        NBTTagList list = this.mobCompound.getTagList("Pos", 6);
+        return new Location(list.func_150309_d(0), list.func_150309_d(1), list.func_150309_d(2));
+    }
+
+    public SoulType getSoulType() throws InvalidMobTag {
+        if (!this.mobCompound.hasKey("soulType")) {
+            throw new InvalidMobTag("soulType");
+        }
+
+        byte soulType = this.mobCompound.getByte("soulType");
+        for (SoulType type : SoulType.values()) {
+            if (type.getTypeAsByte() == soulType) {
+                return type;
             }
+        }
 
-            String classString = this.mobCompound.getString("id");
-            Class entityClass = (Class) EntityList.stringToClassMapping.get(classString);
-            return (Entity) entityClass
-                    .getConstructor(new Class[]{World.class})
-                    .newInstance(world);
-        } catch (Exception e) {
-            throw new InvalidMobTag("NBTTagCompound was improperly formed");
+        return SoulType.UNKNOWN;
+    }
+
+
+    public enum SoulType {
+        LIGHT((byte) 0), DARK((byte) 1), NEUTRAL((byte) 2), UNKNOWN((byte) -1);
+
+        public byte soulType;
+
+        SoulType(byte soulType) {
+            this.soulType = soulType;
+        }
+
+        public byte getTypeAsByte() {
+            return this.soulType;
         }
     }
 
-    public NBTTagCompound getMobCompound() {
-        if (this.mobCompound == null) {
-            this.mobCompound = this.isSimple ? generateSimpleCompound() : generateFullCompound();
+    public class Location {
+        public double x;
+        public double y;
+        public double z;
+
+        public Location(double x, double y, double z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
         }
-        return this.mobCompound;
-    }
-
-    public void spawnInWorld(World world, double x, double y, double z, int side) throws InvalidMobTag {
-        Entity entity = constructNewEntity(world);
-
-        int offsetX = Facing.offsetsXForSide[side];
-        int offsetY = side == 0 ? -1 : 0;
-        int offsetZ = Facing.offsetsZForSide[side];
-        AxisAlignedBB bb = entity.boundingBox;
-
-        entity.setLocationAndAngles(
-                x + (bb.maxX - bb.minX) * 0.5 * offsetX,
-                y + (bb.maxY - bb.minY) * 0.5 * offsetY,
-                z + (bb.maxZ - bb.minZ) * 0.5 * offsetZ,
-                world.rand.nextFloat() * 360.0F,
-                0.0F);
-
-        if (this.isSimple) {
-            entity.motionX = entity.motionY = entity.motionZ = 0.0d;
-            entity.prevPosX = entity.lastTickPosX = entity.posX;
-            entity.prevPosY = entity.lastTickPosY = entity.posY;
-            entity.prevPosZ = entity.lastTickPosZ = entity.posZ;
-            entity.fallDistance = 0.0f;
-            entity.setAir(0);
-            entity.onGround = true;
-        }
-    }
-
-    public String getMobName() {
-        if (this.entity == null) {
-            // I have string : classToStringMapping
-            //
-        }
-
-        // TODO
-        return null;
-    }
-
-    private NBTTagCompound generateSimpleCompound() {
-        NBTTagCompound compound = new NBTTagCompound();
-        compound.setString("id", (String) EntityList.classToStringMapping.get(this.entity.getClass()));
-        return compound;
-    }
-
-    private NBTTagCompound generateFullCompound() {
-        NBTTagCompound compound = generateSimpleCompound();
-
-        NBTTagList location = new NBTTagList();
-        location.appendTag(new NBTTagDouble(this.entity.posX));
-        location.appendTag(new NBTTagDouble(this.entity.posY));
-        location.appendTag(new NBTTagDouble(this.entity.posZ));
-        compound.setTag("location", compound);
-
-        this.entity.writeToNBT(compound);
-
-        return compound;
     }
 
     public class InvalidMobTag extends Exception {
         public InvalidMobTag(String error) {
-            super(error);
+            super("Failed to find attribute '" + error + "' on NBTMob");
         }
     }
 }
